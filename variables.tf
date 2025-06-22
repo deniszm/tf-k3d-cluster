@@ -1,10 +1,10 @@
-variable "K3D_CLUSTER_NAME" {
-  description = "Name of the k3d cluster"
+variable "cluster_name" {
+  description = "Name of the cluster"
   type        = string
   default     = "demo"
 }
 
-variable "K3D_AGENTS" {
+variable "agent_count" {
   description = "Number of agent nodes"
   type        = number
   default     = 3

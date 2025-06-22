@@ -1,7 +1,7 @@
 resource "k3d_cluster" "this" {
-  name    = var.K3D_CLUSTER_NAME
+  name    = var.cluster_name
   servers = 1
-  agents  = var.K3D_AGENTS
+  agents  = var.agent_count
   image   = "rancher/k3s:v1.32.5-k3s1"
 
   kubeconfig {

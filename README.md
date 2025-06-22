@@ -46,8 +46,8 @@ tofu destroy
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| K3D_CLUSTER_NAME | Name of the k3d cluster | `string` | `"demo"` | no |
-| K3D_AGENTS | Number of agent nodes | `number` | `3` | no |
+| cluster_name | Name of the cluster | `string` | `"demo"` | no |
+| agent_count | Number of agent nodes | `number` | `3` | no |
 
 ### Outputs
 
@@ -64,7 +64,7 @@ tofu destroy
 Edit `variables.tf` defaults or use `-var` flags:
 
 ```bash
-tofu apply -var="K3D_CLUSTER_NAME=my-cluster" -var="K3D_AGENTS=5"
+tofu apply -var="cluster_name=my-cluster" -var="agent_count=5"
 ```
 
 ## Architecture
