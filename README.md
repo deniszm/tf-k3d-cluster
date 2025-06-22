@@ -1,132 +1,83 @@
-# Terraform K3D Cluster Module
+# Terraform K3D Cluster
 
-This Terraform module creates a local Kubernetes cluster using k3d. The module provides the same functionality as running `k3d cluster create --agents 3 demo` but with Infrastructure as Code approach.
+This Terraform configuration creates a local Kubernetes cluster using k3d. It provides the same functionality as running `k3d cluster create --agents 3 demo` but with Infrastructure as Code approach.
 
 ## Prerequisites
 
 - Docker installed and running
-- k3d installed (`brew install k3d` on macOS)
-- Terraform >= 1.0
+- OpenTofu >= 1.0 or Terraform >= 1.0
 
-## Usage
+**Note**: k3d CLI is **NOT required** - the Terraform provider handles k3d operations directly through Docker.
 
-### Basic usage (equivalent to `k3d cluster create --agents 3 demo`):
+## Features
 
-```hcl
-module "k3d_cluster" {
-  source = "git::https://github.com/your-username/tf-k3d-cluster.git"
-  
-  cluster_name = "demo"
-  agents       = 3
-}
+- Creates k3d cluster with configurable number of agent nodes
+- Automatically updates kubeconfig and switches context
+- Provides cluster credentials as outputs (similar to KIND cluster)
+- Uses k3s v1.32.5 (latest stable)
+
+## Quick Start
+
+### 1. Initialize and deploy:
+
+```bash
+git clone <this-repo>
+cd tf-k3d-cluster
+tofu init
+tofu apply
 ```
 
-### Custom cluster name and agent count:
+### 2. Verify cluster:
 
-```hcl
-module "k3d_cluster" {
-  source = "git::https://github.com/your-username/tf-k3d-cluster.git"
-  
-  cluster_name = "my-dev-cluster"
-  agents       = 2
-}
+```bash
+kubectl get nodes
+kubectl cluster-info
 ```
 
-### Using specific version/tag:
+### 3. Clean up:
 
-```hcl
-module "k3d_cluster" {
-  source = "git::https://github.com/your-username/tf-k3d-cluster.git?ref=v1.0.0"
-  
-  cluster_name = "prod-cluster"
-  agents       = 5
-}
+```bash
+tofu destroy
 ```
 
-## Variables
+## Configuration
+
+### Variables
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| cluster_name | Name of the k3d cluster | `string` | `"demo"` | no |
-| agents | Number of agent nodes | `number` | `3` | no |
+| K3D_CLUSTER_NAME | Name of the k3d cluster | `string` | `"demo"` | no |
+| K3D_AGENTS | Number of agent nodes | `number` | `3` | no |
 
-## Outputs
+### Outputs
 
-| Name | Description |
-|------|-------------|
-| cluster_name | Name of the k3d cluster |
-| kubeconfig_path | Path to the kubeconfig file |
-| cluster_endpoint | Cluster endpoint URL |
+| Name | Description | Sensitive |
+|------|-------------|-----------|
+| cluster_name | Name of the cluster | No |
+| endpoint | Kubernetes API server endpoint | Yes |
+| client_key | Client private key for cluster authentication | Yes |
+| ca | Cluster CA certificate | Yes |
+| crt | Client certificate for cluster authentication | Yes |
 
-## Commands
+### Example: Customizing the cluster
 
-### Deploy the cluster:
-
-```bash
-terraform init
-terraform plan
-terraform apply
-```
-
-### Connect to the cluster:
+Edit `variables.tf` defaults or use `-var` flags:
 
 ```bash
-# The kubeconfig is automatically updated
-kubectl cluster-info
-kubectl get nodes
+tofu apply -var="K3D_CLUSTER_NAME=my-cluster" -var="K3D_AGENTS=5"
 ```
 
-### Destroy the cluster:
+## Architecture
 
-```bash
-terraform destroy
-```
+- **1 Server Node**: Control plane (master)
+- **3 Agent Nodes**: Worker nodes (configurable)
+- **Network**: Dedicated Docker network
+- **Load Balancer**: Managed load balancer
+- **Kubernetes Version**: v1.32.5+k3s1
 
-## Complete Example Project
+## Contributing
 
-Create a new directory for your project and add these files:
-
-**main.tf:**
-```hcl
-module "k3d_cluster" {
-  source = "git::https://github.com/your-username/tf-k3d-cluster.git"
-  
-  cluster_name = "my-cluster"
-  agents       = 3
-}
-
-output "cluster_name" {
-  value = module.k3d_cluster.cluster_name
-}
-
-output "kubeconfig_path" {
-  value = module.k3d_cluster.kubeconfig_path
-}
-```
-
-**versions.tf:**
-```hcl
-terraform {
-  required_version = ">= 1.0"
-  
-  required_providers {
-    k3d = {
-      source  = "pvotal-tech/k3d"
-      version = "~> 0.0.7"
-    }
-  }
-}
-```
-
-Then run:
-```bash
-terraform init
-terraform apply
-```
-
-## Notes
-
-- The cluster automatically updates your kubeconfig and switches context
-- Default configuration creates 1 server node and the specified number of agent nodes
-- The cluster is accessible from localhost
-- To remove the cluster, run `terraform destroy`
+1. Fork the repository
+2. Make your changes
+3. Test with `tofu plan` and `tofu apply`
+4. Submit a pull request
